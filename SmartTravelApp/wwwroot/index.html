@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Travel & Weather Dashboard | .NET Architecture Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="fonts/AppleColorEmoji.css">
+    <link rel="stylesheet" href="css/styles.css?v=5">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header / Navigation Bar -->
+        <header class="app-header">
+            <div class="brand">
+                <span class="brand-icon emoji">✈️</span>
+                <div class="brand-text">
+                    <h1>SmartTravel</h1>
+                    <span class="subtitle">Inteligentny Asystent Podróży</span>
+                </div>
+            </div>
+
+            <div id="user-status-bar" class="user-status-bar hidden">
+                <span class="user-badge">
+                    <span class="status-dot"></span>
+                    <span id="user-email-display">user@domain.com</span>
+                </span>
+                <button id="logout-btn" class="btn btn-outline btn-sm">Wyloguj</button>
+            </div>
+        </header>
+
+        <!-- Notification Banner -->
+        <div id="alert-banner" class="alert-banner hidden">
+            <span id="alert-message"></span>
+            <button class="alert-close" onclick="closeAlert()">&times;</button>
+        </div>
+
+        <!-- AUTH SECTION -->
+        <main id="auth-section" class="auth-section">
+            <div class="auth-card glass-panel">
+                <div class="auth-tabs">
+                    <button id="tab-login" class="tab-btn active" onclick="switchTab('login')">Logowanie</button>
+                    <button id="tab-register" class="tab-btn" onclick="switchTab('register')">Rejestracja</button>
+                    <button id="tab-activate" class="tab-btn" onclick="switchTab('activate')">Aktywacja E-mail</button>
+                </div>
+
+                <!-- FORMULARZ LOGOWANIA -->
+                <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
+                    <h2>Zaloguj się do konta</h2>
+                    <p class="form-desc">Wpisz e-mail oraz hasło. Wymagane jest wcześniejsze potwierdzenie adresu e-mail.</p>
+                    
+                    <div class="form-group">
+                        <label for="login-email">Adres E-mail</label>
+                        <input type="email" id="login-email" placeholder="twoj@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Hasło</label>
+                        <input type="password" id="login-password" placeholder="••••••••" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span>Zaloguj się</span>
+                    </button>
+                </form>
+
+                <!-- FORMULARZ REJESTRACJI -->
+                <form id="register-form" class="auth-form" onsubmit="handleRegister(event)">
+                    <h2>Utwórz nowe konto</h2>
+                    <p class="form-desc">Po zarejestrowaniu system wygeneruje unikalny token aktywacyjny.</p>
+
+                    <div class="form-group">
+                        <label for="register-email">Adres E-mail</label>
+                        <input type="email" id="register-email" placeholder="twoj@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-password">Hasło (min. 6 znaków)</label>
+                        <input type="password" id="register-password" placeholder="••••••••" minlength="6" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent btn-block">
+                        <span>Zarejestruj się</span>
+                    </button>
+                </form>
+
+                <!-- FORMULARZ WERYFIKACJI / AKTYWACJI E-MAIL -->
+                <form id="activate-form" class="auth-form" onsubmit="handleActivate(event)">
+                    <h2>Weryfikacja adresu e-mail</h2>
+                    <p class="form-desc">Wklej token aktywacyjny otrzymany w e-mailu (lub kliknij link z powiadomienia).</p>
+
+                    <div class="form-group">
+                        <label for="activate-token">Token Aktywacyjny (GUID)</label>
+                        <input type="text" id="activate-token" placeholder="np. a1b2c3d4..." required>
+                    </div>
+
+                    <button type="submit" class="btn btn-success btn-block">
+                        <span>Aktywuj Konto</span>
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <!-- DASHBOARD SECTION (Tylko po zalogowaniu) -->
+        <main id="dashboard-section" class="dashboard-section hidden">
+            <!-- Search & Controls Bar -->
+            <div class="search-bar-card glass-panel">
+                <form id="search-form" class="search-form" onsubmit="handleSearch(event)">
+                    <!-- Custom Select Dropdown -->
+                    <div class="custom-select-wrapper" id="custom-select-wrapper">
+                        <input type="hidden" id="country-select" value="Poland">
+                        
+                        <button type="button" class="custom-select-btn" id="custom-select-btn" onclick="toggleCustomDropdown(event)">
+                            <span class="select-selected-content">
+                                <span class="select-flag emoji" id="selected-flag">🇵🇱</span>
+                                <span class="select-text" id="selected-country-name">Poland</span>
+                            </span>
+                            <span class="select-chevron">▼</span>
+                        </button>
+
+                        <div class="custom-select-dropdown hidden" id="custom-select-dropdown">
+                            <div class="dropdown-search-box">
+                                <span class="dropdown-search-icon emoji">🔍</span>
+                                <input type="text" id="dropdown-filter-input" placeholder="Search country..." oninput="filterCountryOptions(event)" autocomplete="off">
+                            </div>
+                            <div class="dropdown-options-container" id="dropdown-options-container">
+                                <!-- Option items generated dynamically via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <span><span class="emoji">📊</span> Pobierz Dane Kraju</span>
+                    </button>
+                </form>
+                
+                <div class="quick-tags">
+                    <span class="tag-label">Popularne:</span>
+                    <button type="button" class="chip" onclick="quickSearch('Poland')"><span class="emoji">🇵🇱</span> Poland</button>
+                    <button type="button" class="chip" onclick="quickSearch('Spain')"><span class="emoji">🇪🇸</span> Spain</button>
+                    <button type="button" class="chip" onclick="quickSearch('Japan')"><span class="emoji">🇯🇵</span> Japan</button>
+                    <button type="button" class="chip" onclick="quickSearch('United States')"><span class="emoji">🇺🇸</span> United States</button>
+                    <button type="button" class="chip" onclick="quickSearch('Egypt')"><span class="emoji">🇪🇬</span> Egypt</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid: 3 Cards -->
+            <div class="dashboard-grid">
+                <!-- Card 1: Geografia i Dane Kraju -->
+                <div class="dashboard-card glass-panel api-card-geo">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="card-badge badge-geo"><span class="emoji">🌍</span> Informacje o Kraju</span>
+                            <h3 id="geo-country-name">Poland</h3>
+                            <span id="geo-official-name" class="card-subtitle">Republic of Poland</span>
+                        </div>
+                        <span id="geo-flag-emoji" class="flag-large emoji">🇵🇱</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="info-row">
+                            <span class="info-label"><span class="emoji">🏛️</span> Stolica</span>
+                            <span id="geo-capital" class="info-value">Warszawa</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><span class="emoji">👥</span> Populacja</span>
+                            <span id="geo-population" class="info-value">37,748,841</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><span class="emoji">🌍</span> Region</span>
+                            <span id="geo-region" class="info-value">Europe</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><span class="emoji">💱</span> Kod Waluty</span>
+                            <span id="geo-currency" class="info-value highlight">PLN (zł)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Kurs Waluty -->
+                <div class="dashboard-card glass-panel api-card-currency">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="card-badge badge-currency"><span class="emoji">💱</span> Kurs Waluty i Finanse</span>
+                            <h3>Kurs Waluty</h3>
+                            <span id="currency-code-display" class="card-subtitle">PLN ➔ PLN</span>
+                        </div>
+                        <span class="card-icon emoji">📈</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="stat-box">
+                            <span class="stat-label">Przelicznik na PLN</span>
+                            <span id="currency-rate" class="stat-value">1.0000 PLN</span>
+                            <span id="currency-date" class="stat-date">Aktualizacja: NBP</span>
+                        </div>
+                        <p id="currency-note" class="info-note">Kurs średni Narodowego Banku Polskiego.</p>
+                    </div>
+                </div>
+
+                <!-- Card 3: Prognoza Pogody -->
+                <div class="dashboard-card glass-panel api-card-weather">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="card-badge badge-weather"><span class="emoji">🌤️</span> Prognoza Pogody</span>
+                            <h3>Pogoda w Stolicy</h3>
+                            <span id="weather-location" class="card-subtitle">Warszawa</span>
+                        </div>
+                        <span class="card-icon emoji">☁️</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="stat-box weather-stat">
+                            <span id="weather-temp" class="stat-value temp-value">21.5°C</span>
+                            <span id="weather-desc" class="weather-desc"><span class="emoji">☀️</span> Słonecznie</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><span class="emoji">💨</span> Prędkość Wiatru</span>
+                            <span id="weather-wind" class="info-value">12.5 km/h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js?v=5"></script>
+</body>
+</html>
