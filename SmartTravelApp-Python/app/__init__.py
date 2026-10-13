@@ -1,0 +1,1 @@
+"""SmartTravel – FastAPI backend."""
